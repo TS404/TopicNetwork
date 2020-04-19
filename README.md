@@ -1,2 +1,2 @@
 # TopicNetwork
-Co-occurance of topics in academic publications
+Co-occurrence of topics in academic publications
