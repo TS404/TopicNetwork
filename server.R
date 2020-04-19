@@ -32,7 +32,7 @@ shinyServer(function(input, output) {
   devtools::install.packages('mattflor/chorddiag')
   devtools::install.packages('garthtarr/edgebundleR')
   devtools::install.packages('jcheng5/bubbles')
-  library('pediarr',)
+  library('pediarr')
   library('chorddiag')
   library('edgebundleR')
   library('bubbles')
