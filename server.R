@@ -11,30 +11,32 @@ shinyServer(function(input, output) {
 #Setup --------
 #> Packages  -------------
 
-packagelist.cran <- c('WikipediR',
-                      'WikidataR',
-                      'WikidataQueryServiceR',
-                      'tibble',
-                      'devtools',
-                      'stringr',
-                      'tidytext',
-                      'htmltidy',
-                      'dplyr',
-                      'readr',
-                      'xml2',
-                      'lubridate',
-                      'igraph',
-                      'networkD3',
-                      'dbscan',
-                      'Hmisc')
-packagelist.git  <- c('chainsawriot/pediarr',
-                      'mattflor/chorddiag',
-                      'garthtarr/edgebundleR',
-                      'jcheng5/bubbles')
-packagelist.git2 <- sapply(stringr::str_split(packagelist.git,pattern = "/"),tail,n=1)
-install.packages(packagelist.cran[!(packagelist.cran %in% installed.packages()[,"Package"])])
-devtools::install_github  (packagelist.git[!(packagelist.git2%in% installed.packages()[,"Package"])])
-sapply(c(packagelist.cran,packagelist.git2), require, character.only = TRUE)
+  library('WikipediR')
+  library('WikidataR')
+  library('WikidataQueryServiceR')
+  library('tibble')
+  library('devtools')
+  library('stringr')
+  library('tidytext')
+  library('htmltidy')
+  library('dplyr')
+  library('readr')
+  library('xml2')
+  library('lubridate')
+  library('igraph')
+  library('networkD3')
+  library('dbscan')
+  library('Hmisc')
+  
+  devtools::install.packages('chainsawriot/pediarr')
+  devtools::install.packages('mattflor/chorddiag')
+  devtools::install.packages('garthtarr/edgebundleR')
+  devtools::install.packages('jcheng5/bubbles')
+  library('pediarr',)
+  library('chorddiag')
+  library('edgebundleR')
+  library('bubbles')
+  
 
 #> Functions ------
 initials <- function(x,type="FLast"){
