@@ -74,13 +74,37 @@ qdesc <- function(x){
   out
 }
 
+qcite <- function(x){
+  out <- paste0(1:nrow(x),
+                ". ",
+                x$authorLabel,', et al. "',
+                '<a href="https://doi.org/',
+                x$doi,
+                '">',
+                x$workLabel,'</a>" <i>',
+                x$publisherLabel,
+                "</i> (",x$year,") ",
+                
+                '<a href="https://doi.org/',
+                x$doi,
+                '">',
+                x$doi,
+                '</a> (<a href="',
+                x$work,
+                '">',
+                gsub(".*/","",x$work),
+                '</a>)',
+                collapse = "</br>")
+  out
+}
+
 # Calculations --------
 
 input.button <- eventReactive(input$button.view,{
   nucleation.Qs <- qid_from_name(switch(input$rb,
                                example1 = c('Covid-19','SARS-CoV-2','2019–20 COVID-19 pandemic'),
                                example2 = c('antiviral drug','defensin', 'protease', 'cyclic peptide'),
-                               custom   = (unlist(strsplit(input$query,",")))),
+                               custom   = unlist(strsplit(input$query,","))),
                         limit  = 1,
                         unlist = TRUE)
   
@@ -175,8 +199,7 @@ input.button <- eventReactive(input$button.view,{
        )
 })
 
-# Text -------------
-output$qids  <- renderUI({ HTML(paste(lapply(input.button()$nucleation.Qs,qdesc),collapse = "<br/>")) })
+
 
 # Visualisations ---------
 #> renderForceNetwork ---------
@@ -216,6 +239,49 @@ output$chord <- renderChorddiag({
             chordedgeColor    = '#00000022',
             groupedgeColor    = '#00000099')
 })
+
+# Text -------------
+observe({
+  updateCheckboxGroupInput(session, "inCheckboxGroup2",
+                           label = NULL,
+                           choices = input.button()$nodes.D3$name
+  )
+})
+
+output$qids  <- renderUI({ HTML(paste(lapply(input.button()$nucleation.Qs,qdesc),collapse = "<br/>")) })
+
+output$cites <- renderUI({
+  subset.Qs <- qid_from_name(input$inCheckboxGroup2,limit=1)
+  subset.sparql <- paste0('SELECT ?work ?workLabel ?authorLabel ?publisherLabel ?year ?pdate ?doi
+                         WHERE { ?work ',
+                          paste0("wdt:P921? wd:",subset.Qs,";",collapse=""),
+                          '(p:P50|p:P2093) [ (ps:P50|ps:P2093) ?author; pq:P1545 ?ordinal ].  
+                           OPTIONAL { ?work wdt:P1433 ?publisher. }
+                           OPTIONAL { ?work wdt:P577 ?pdate. }
+                           OPTIONAL { ?work wdt:P356 ?doi. }
+                           bind(str(year(?pdate)) as ?year)
+                           FILTER (xsd:integer(?ordinal) = 1)
+                           SERVICE  wikibase:label { bd:serviceParam wikibase:language "en,fr,de,ru,es,zh,jp". }
+                         }
+                         LIMIT 10000')
+  subset.qr   <- suppressMessages(unspecial(query_wikidata(subset.sparql)))
+  if(nrow(subset.qr)>0){
+    subset.cite <- paste0("<b>",
+                          nrow(subset.qr),
+                          " publication",
+                          if(nrow(subset.qr)>1){"s"},
+                          " found on that ",
+                          if(length(subset.Qs)>1){"combination of topics"}else{"topic"},
+                          "</b></br>",
+                          qcite(subset.qr))
+    HTML(subset.cite)
+  }else{
+    HTML("No publications found on that combination of topics")
+  }
+
+})
+
+
 
 
 }) # end of shinyServer
