@@ -65,7 +65,7 @@ colMax <- function(x) {if(is.null(dim(x))){x}else{apply(x, 2, max)}}
 qdesc <- function(x){
   y   <- WikidataR::find_item(x)
   out <- paste0(y[[1]]$label,
-                ' (<a href="https://wikidata.org/wiki/',
+                ' (<a target="_blank" href="https://wikidata.org/wiki/',
                 y[[1]]$id,
                 '">',
                 y[[1]]$id,
@@ -78,7 +78,7 @@ qcite <- function(x){
   out <- paste0(1:nrow(x),
                 ". ",
                 x$authorLabel,', et al. "',
-                '<a href="https://doi.org/',
+                '<a target="_blank" href="https://doi.org/',
                 x$doi,
                 '">',
                 x$workLabel,'</a>" <i>',
@@ -89,7 +89,7 @@ qcite <- function(x){
                 x$doi,
                 '">',
                 x$doi,
-                '</a> (<a href="',
+                '</a> (<a target="_blank" href="',
                 x$work,
                 '">',
                 gsub(".*/","",x$work),
@@ -220,7 +220,7 @@ output$force <- renderForceNetwork({
                fontFamily   = "sans-serif",
                fontSize     = 20,
                height       = 5000,
-               clickAction  = 'alert("You clicked " + d.name);',
+               clickAction  = 'Shiny.onInputChange("nodeid", d.name)',
                linkWidth    = JS('function(d){return 1+(d.value)}'),
                linkDistance = JS('function(d){return 2/(1+d.value)}'),
                radiusCalculation = JS("(d.nodesize)+3")
@@ -241,12 +241,23 @@ output$chord <- renderChorddiag({
 })
 
 # Text -------------
+
+
 observe({
+  input.button()$nodes.D3$name <- input.button()$nodes.D3$name
+  choices.df <- data.frame(names  = sort(input.button()$nodes.D3$name),
+                         toggle = rep(FALSE,length(input.button()$nodes.D3$name)))
+  
+  choices.df$toggle[which(choices.df$names==input$nodeid)] <- !choices.df$toggle[which(choices.df$names==input$nodeid)]
+  
   updateCheckboxGroupInput(session, "inCheckboxGroup2",
-                           label = NULL,
-                           choices = input.button()$nodes.D3$name
+                           label    = NULL,
+                           choices  = choices.df$names,
+                           selected = choices.df$toggle
   )
+  output$nodes.sel <- renderUI({ HTML(paste(selected)) })
 })
+
 
 output$qids  <- renderUI({ HTML(paste(lapply(input.button()$nucleation.Qs,qdesc),collapse = "<br/>")) })
 
@@ -265,19 +276,24 @@ output$cites <- renderUI({
                          }
                          LIMIT 10000')
   subset.qr   <- suppressMessages(unspecial(query_wikidata(subset.sparql)))
-  if(nrow(subset.qr)>0){
-    subset.cite <- paste0("<b>",
-                          nrow(subset.qr),
-                          " publication",
-                          if(nrow(subset.qr)>1){"s"},
-                          " found on that ",
-                          if(length(subset.Qs)>1){"combination of topics"}else{"topic"},
-                          "</b></br>",
-                          qcite(subset.qr))
-    HTML(subset.cite)
+  if(length(subset.Qs)>0){
+    if(nrow(subset.qr)>0){
+      subset.cite <- paste0("<b>",
+                            nrow(subset.qr),
+                            " publication",
+                            if(nrow(subset.qr)>1){"s"},
+                            " found on that ",
+                            if(length(subset.Qs)>1){"combination of topics"}else{"topic"},
+                            "</b></br>",
+                            qcite(subset.qr))
+      HTML(subset.cite)
+    }else{
+      HTML("No publications found on that combination of topics")
+    }    
   }else{
-    HTML("No publications found on that combination of topics")
+    HTML("Select topics from list on the left")
   }
+
 
 })
 

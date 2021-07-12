@@ -60,11 +60,12 @@ shinyUI(fluidPage(
             actionButton("button.view", "Calculate network"),
             hr(),
             sliderInput("charge",
-                        "node separation",
+                        "Node separation",
                         min = 1,
                         max = 50,
                         value = 30),
             hr(),
+            htmlOutput("nodes.sel"),
             checkboxGroupInput("inCheckboxGroup2", label="List publications on topics",inline=TRUE),
             helpText(p("Code for this page can be found at",
                        a(href="https://github.com/TS404/TopicNetwork","github.com/TS404/TopicNetwork"),
@@ -73,7 +74,7 @@ shinyUI(fluidPage(
         # Show the network
         mainPanel(
             forceNetworkOutput("force", height = "800px"),
-            htmlOutput("cites")
+            htmlOutput("cites"),
             # chorddiagOutput("chord", height = "800px")
         )
     )
